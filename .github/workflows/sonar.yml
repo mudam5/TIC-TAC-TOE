@@ -34,7 +34,7 @@ jobs:
         run: trivy fs . > trivyfs.txt || true
 
       - name: Upload Trivy FS scan results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: trivy-fs-scan
           path: trivyfs.txt
@@ -52,7 +52,7 @@ jobs:
         run: trivy image mudam5/tic-tac-toe:latest > trivyimage.txt || true
 
       - name: Upload Trivy image scan results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: trivy-image-scan
           path: trivyimage.txt
@@ -69,7 +69,7 @@ jobs:
         run: trivy image mudam5/tic-tac-toe:latest > trivyimagedeploy.txt || true
 
       - name: Upload Trivy deploy image scan results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: trivy-deploy-image-scan
           path: trivyimagedeploy.txt
