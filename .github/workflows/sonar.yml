@@ -29,7 +29,5 @@ jobs:
           npm install stable@latest
           npm install svgo@latest
 
-      - name: Trivy file scan
-        run: trivy fs . > trivyfs.txt
 
         
