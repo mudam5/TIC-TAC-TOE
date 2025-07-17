@@ -19,8 +19,10 @@ jobs:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
       - name: npm install dependency
         run: npm install
+      
       - name: Trivy file scan
         run: trivy fs . > trivyfs.txt
+
       - name: Docker Build and push
         run: |
           docker build -t tic-tac-toe .
@@ -29,16 +31,20 @@ jobs:
           docker push mudam5/tic-tac-toe:latest
         env:
           DOCKER_CLI_ACI: 1
+      
       - name: Image scan
         run: trivy image mudam5/tic-tac-toe:latest > trivyimage.txt
+
   deploy:
    needs: build-analyze-scan
    runs-on: [self-hosted]
    steps:
       - name: docker pull image
         run: docker pull mudam5/tic-tac-toe:latest
+      
       - name: Image scan
         run: trivy image mudam5/tic-tac-toe:latest > trivyimagedeploy.txt
+
       - name: Deploy to container
         run: docker run -d --name game -p 3000:3000 mudam5/tic-tac-toe:latest
       - name: Update kubeconfig
