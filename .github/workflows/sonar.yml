@@ -1,44 +1,26 @@
-name: Build, Analyze, Scan
-
+name: Build,Analyze,scan
 on:
   push:
     branches:
       - main
-
 jobs:
   build-analyze-scan:
     name: Build
     runs-on: [self-hosted]
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
-          fetch-depth: 0
-
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
       - name: Build and analyze with SonarQube
         uses: sonarsource/sonarqube-scan-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-
-      - name: Install npm dependencies
-        run: |
-          npm install || true
-          npm audit fix || true
-
-      - name: Trivy DB Update
-        run: trivy --download-db-only
-
+      - name: npm install dependency
+        run: npm install
       - name: Trivy file scan
-        run: trivy fs . > trivyfs.txt || true
-
-      - name: Upload Trivy FS scan results
-        uses: actions/upload-artifact@v4
-        with:
-          name: trivy-fs-scan
-          path: trivyfs.txt
-
+        run: trivy fs . > trivyfs.txt
       - name: Docker Build and push
         run: |
           docker build -t tic-tac-toe .
@@ -47,42 +29,22 @@ jobs:
           docker push mudam5/tic-tac-toe:latest
         env:
           DOCKER_CLI_ACI: 1
-
-      - name: Trivy image scan
-        run: trivy image mudam5/tic-tac-toe:latest > trivyimage.txt || true
-
-      - name: Upload Trivy image scan results
-        uses: actions/upload-artifact@v4
-        with:
-          name: trivy-image-scan
-          path: trivyimage.txt
-
+      - name: Image scan
+        run: trivy image mudam5/tic-tac-toe:latest > trivyimage.txt
   deploy:
-    needs: build-analyze-scan
-    runs-on: [self-hosted]
-
-    steps:
-      - name: Docker pull image
+   needs: build-analyze-scan
+   runs-on: [self-hosted]
+   steps:
+      - name: docker pull image
         run: docker pull mudam5/tic-tac-toe:latest
-
-      - name: Trivy image scan (post-deploy)
-        run: trivy image mudam5/tic-tac-toe:latest > trivyimagedeploy.txt || true
-
-      - name: Upload Trivy deploy image scan results
-        uses: actions/upload-artifact@v4
-        with:
-          name: trivy-deploy-image-scan
-          path: trivyimagedeploy.txt
-
+      - name: Image scan
+        run: trivy image sevenajay/tic-tac-toe:latest > trivyimagedeploy.txt
       - name: Deploy to container
         run: docker run -d --name game -p 3000:3000 mudam5/tic-tac-toe:latest
-
       - name: Update kubeconfig
         run: aws eks --region ap-south-1 update-kubeconfig --name EKS_CLOUD
-
-      - name: Deploy to Kubernetes
+      - name: Deploy to kubernetes
         run: kubectl apply -f deployment-service.yml
-
       - name: Send a Slack Notification
         if: always()
         uses: act10ns/slack@v1
