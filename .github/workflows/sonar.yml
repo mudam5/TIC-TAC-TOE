@@ -33,8 +33,3 @@ jobs:
       - name: Trivy file scan
         run: trivy fs . > trivyfs.txt
 
-      - name: Upload Trivy scan results
-        uses: actions/upload-artifact@v3
-        with:
-          name: trivy-scan-results
-          path: trivyfs.txt
