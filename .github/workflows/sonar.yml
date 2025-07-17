@@ -14,7 +14,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
-          fetch-depth: 0  # Ensures full history for SonarQube analysis
+          fetch-depth: 0
 
       - name: Build and analyze with SonarQube
         uses: sonarsource/sonarqube-scan-action@master
@@ -22,12 +22,19 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
-      - name: Install npm dependencies
+      - name: Install npm dependencies and fix vulnerabilities
         run: |
           npm install
           npm outdated
           npm install stable@latest
           npm install svgo@latest
+          npm audit fix || true  # Prevent failure if some issues can't be fixed
 
+      - name: Trivy file scan
+        run: trivy fs . > trivyfs.txt
 
-        
+      - name: Upload Trivy scan results
+        uses: actions/upload-artifact@v3
+        with:
+          name: trivy-scan-results
+          path: trivyfs.txt
